@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -eu
+
+help()
+{
+    echo "Run vpnkit alongside minikube with hyperkit"
+}
+
+while getopts ":h" option; do
+    case $option in
+        h)
+            help
+            exit;;
+    esac
+done
+
+echo "⚙️   Starting vpnkit..."
+vpnkit --ethernet /tmp/vpnkit.eth.sock > /dev/null 2>&1 &
+
+echo "⚙️   Starting minikube..."
+minikube start \
+    --driver hyperkit \
+    --hyperkit-vpnkit-sock /tmp/vpnkit.eth.sock \
+    --memory 8192 \
+    --cpus 4 \
+    --mount \
+    --mount-string /Users:/Users,/Volumes:/Volumes,/private:/private,/tmp:/tmp,/var/folders:/var/folders
+eval $(minikube -p minikube docker-env)
+
+echo "😎  To stop docker vm, run: \"docker_vm_stop\""
+
+exit 0
